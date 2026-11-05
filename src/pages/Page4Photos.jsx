@@ -108,7 +108,7 @@ const FilmStrip = ({ currentIndex, isSpecialPhase }) => {
         className="text-center py-1 font-mono text-xs tracking-widest"
         style={{ color: 'rgba(212,165,116,0.5)', background: '#0d0d0d' }}
       >
-        KODAK GOLD • 400 • JIYA 2003–2024
+        KODAK GOLD • 400 • JIYA 2005–2026
       </div>
     </div>
   );
