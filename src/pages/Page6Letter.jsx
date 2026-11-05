@@ -12,7 +12,7 @@ const Page6Letter = ({ onLogout }) => {
   useEffect(() => {
     musicManager.stop();
     setTimeout(() => {
-      musicManager.play('thodiDer', false);
+      musicManager.play('thodiDer', true);
     }, 400);
 
     // Heading animation sequence

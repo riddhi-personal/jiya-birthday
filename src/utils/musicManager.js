@@ -1,5 +1,5 @@
 // Centralized music manager
-// Handles page-specific tracks, prevents double-play, respects mute preference
+// Handles page-specific tracks, prevents double-play, respects mute preference, and guarantees infinite looping
 
 const TRACKS = {
   mashup: '/audio/mashup.m4a',
@@ -60,7 +60,7 @@ class MusicManager {
       return;
     }
 
-    // Same track already playing — don't restart
+    // Same track already playing — keep playing smoothly without restarting
     if (
       this.currentTrack === trackName &&
       this.currentAudio &&
@@ -74,13 +74,21 @@ class MusicManager {
 
     this.currentTrack = trackName;
     const audio = new Audio(src);
-    audio.loop = loop;          // native loop handles endless repeat
     audio.volume = this.isMuted ? 0 : 0.7;
+
+    if (loop) {
+      audio.loop = true;
+      // Double guarantee: if native loop stalls or ends, restart immediately
+      audio.addEventListener('ended', () => {
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+      });
+    }
 
     this.currentAudio = audio;
 
     audio.play().catch(() => {
-      // Autoplay blocked — audio ready when user next interacts
+      // Audio queued for user click
     });
 
     this.notifyListeners();
@@ -94,11 +102,12 @@ class MusicManager {
 
     if (immediate) {
       audio.pause();
+      audio.currentTime = 0;
       audio.src = '';
       return;
     }
 
-    // Fade out over ~300 ms
+    // Quick smooth fade out
     let vol = audio.volume;
     const step = vol / 6;
     const fadeInterval = setInterval(() => {
@@ -107,9 +116,10 @@ class MusicManager {
       if (vol <= 0) {
         clearInterval(fadeInterval);
         audio.pause();
+        audio.currentTime = 0;
         audio.src = '';
       }
-    }, 50);
+    }, 40);
   }
 
   stop() {
@@ -130,11 +140,11 @@ class MusicManager {
     return this.isMuted;
   }
 
-  // For Page 4: play alfaaz01 → alfaaz02 sequentially
+  // Sequential playlist for Page 4 (alfaaz01 → alfaaz02 → repeats continuously)
   playSequential(tracks) {
     if (!this.isUserInteracted) {
       this.pendingTrack = tracks[0];
-      this.pendingLoop = false;
+      this.pendingLoop = true;
       return;
     }
 
@@ -143,18 +153,20 @@ class MusicManager {
     let index = 0;
 
     const playNext = () => {
-      if (index >= tracks.length) return;
+      if (!tracks || tracks.length === 0) return;
 
-      const src = TRACKS[tracks[index]];
+      const trackKey = tracks[index];
+      const src = TRACKS[trackKey];
       if (!src) return;
 
-      this.currentTrack = tracks[index];
+      this.currentTrack = trackKey;
       const audio = new Audio(src);
       audio.volume = this.isMuted ? 0 : 0.7;
       audio.loop = false;
 
       audio.addEventListener('ended', () => {
-        index++;
+        // Continuous cycle: alfaaz01 -> alfaaz02 -> alfaaz01 ...
+        index = (index + 1) % tracks.length;
         playNext();
       });
 
