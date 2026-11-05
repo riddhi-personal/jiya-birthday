@@ -1,11 +1,16 @@
 // Centralized music manager
 // Handles page-specific tracks, prevents double-play, respects mute preference, and guarantees infinite looping
 
+// Base URL helper for GitHub Pages asset resolution
+const BASE_URL = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL
+  : `${import.meta.env.BASE_URL}/`;
+
 const TRACKS = {
-  mashup: '/audio/mashup.m4a',
-  alfaaz01: '/audio/alfaaz01.mp3',
-  alfaaz02: '/audio/alfaaz02.mp3',
-  thodiDer: '/audio/Thodi_der.mp3',
+  mashup: `${BASE_URL}audio/mashup.m4a`,
+  alfaaz01: `${BASE_URL}audio/alfaaz01.mp3`,
+  alfaaz02: `${BASE_URL}audio/alfaaz02.mp3`,
+  thodiDer: `${BASE_URL}audio/Thodi_der.mp3`,
 };
 
 class MusicManager {
